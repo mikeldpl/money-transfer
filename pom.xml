@@ -18,6 +18,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
             <version>2.9.0</version>
@@ -37,28 +43,17 @@
             <artifactId>gson</artifactId>
             <version>2.8.5</version>
         </dependency>
+
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-            <version>3.6.3</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>logback-classic</artifactId>
-                    <groupId>ch.qos.logback</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>5.2.4</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.dagger</groupId>
             <artifactId>dagger</artifactId>
             <version>${dagger.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.dagger</groupId>
-            <artifactId>dagger-compiler</artifactId>
-            <version>${dagger.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -83,6 +78,24 @@
 
     <build>
         <plugins>
+
+<!--            Enables Dagger annotation processor-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.dagger</groupId>
+                            <artifactId>dagger-compiler</artifactId>
+                            <version>${dagger.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+<!--            Creates fat jar-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -104,6 +117,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+<!--            Creates docker images-->
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
@@ -118,29 +133,16 @@
                         <configuration>
                             <retryCount>0</retryCount>
                             <repository>mikeldpl/moneytransfer</repository>
+                            <dockerfile>docker/Dockerfile</dockerfile>
                             <buildArgs>
                                 <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
                             </buildArgs>
                         </configuration>
                     </execution>
-<!--                    TODO: enable native build-->
-<!--                    <execution>-->
-<!--                        <id>Create native application image</id>-->
-<!--                        <goals>-->
-<!--                            <goal>build</goal>-->
-<!--                        </goals>-->
-<!--                        <phase>package</phase>-->
-<!--                        <configuration>-->
-<!--                            <retryCount>0</retryCount>-->
-<!--                            <repository>mikeldpl/moneytransfer-native</repository>-->
-<!--                            <dockerfile>Dockerfile.native</dockerfile>-->
-<!--                            <buildArgs>-->
-<!--                                <JAR_FILE>${project.build.finalName}.jar</JAR_FILE>-->
-<!--                            </buildArgs>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                 </executions>
             </plugin>
+
+<!--            Run integration tests. It is added to build process to be more concise at the presentation.-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>

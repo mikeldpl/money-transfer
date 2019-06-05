@@ -1,0 +1,29 @@
+[
+  {
+    "name": "org.flywaydb.core.internal.logging.javautil.JavaUtilLogCreator",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jetty.server.HttpOutput",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "org.eclipse.jetty.server.HttpChannel"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "[Lorg.eclipse.jetty.servlet.ServletMapping;",
+    "allDeclaredFields": true,
+    "allPublicFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  }
+]

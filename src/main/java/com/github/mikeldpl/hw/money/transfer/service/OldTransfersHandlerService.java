@@ -1,11 +1,8 @@
 package com.github.mikeldpl.hw.money.transfer.service;
 
-import javax.inject.Singleton;
-
 /**
  * Reject old transfers which was not handled in time
  */
-@Singleton
 public class OldTransfersHandlerService {
 
     private final long transferExpirationPeriod;

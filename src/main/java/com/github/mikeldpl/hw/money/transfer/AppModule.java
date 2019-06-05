@@ -3,6 +3,7 @@ package com.github.mikeldpl.hw.money.transfer;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.time.Duration;
 
 import com.github.mikeldpl.hw.money.transfer.repository.AccountRepository;
 import com.github.mikeldpl.hw.money.transfer.repository.TransferActionRepository;
@@ -10,6 +11,7 @@ import com.github.mikeldpl.hw.money.transfer.repository.TransferRepository;
 import com.github.mikeldpl.hw.money.transfer.repository.jdbc.AccountJdbcRepository;
 import com.github.mikeldpl.hw.money.transfer.repository.jdbc.TransferActionJdbcRepository;
 import com.github.mikeldpl.hw.money.transfer.repository.jdbc.TransferJdbcRepository;
+import com.github.mikeldpl.hw.money.transfer.service.OldTransfersHandlerService;
 import com.github.mikeldpl.hw.money.transfer.service.TransactionExecutorJdbcService;
 import com.github.mikeldpl.hw.money.transfer.service.TransactionExecutorService;
 import com.google.gson.FieldNamingPolicy;
@@ -47,6 +49,13 @@ abstract class AppModule {
     @Singleton
     static TransactionExecutorJdbcService transactionExecutorJdbcService(DataSource dataSource) {
         return new TransactionExecutorJdbcService(dataSource, TRANSACTION_ISOLATION);
+    }
+
+    @Provides
+    @Singleton
+    static OldTransfersHandlerService oldTransfersHandlerService() {
+        final long transferExpirationPeriod = Duration.ofDays(1).toMillis();
+        return new OldTransfersHandlerService(transferExpirationPeriod, "0 1 * * *");
     }
 
     @Binds

@@ -1,0 +1,38 @@
+FROM oracle/graalvm-ce:19.0.0 AS builder
+RUN gu install native-image
+
+WORKDIR /root
+ARG JAR_FILE
+COPY target/${JAR_FILE} app.jar
+COPY docker/reflection_config.json reflection_config.json
+RUN native-image --static --no-fallback --allow-incomplete-classpath\
+                 -H:IncludeResources=".*.properties|.*.xml|.*.xsd|.*.sql|.*.txt|META-INF/services/.*" \
+                 -H:IncludeResourceBundles=\
+org.hsqldb.resources.sql-state-messages\
+,org.hsqldb.resources.info-column-remarks\
+,org.hsqldb.resources.info-table-remarks\
+                 -H:ReflectionConfigurationFiles=reflection_config.json\
+                 --initialize-at-build-time=\
+org.hsqldb.jdbc.JDBCDriver\
+,org.eclipse.jetty.util.thread.TryExecutor\
+,org.slf4j.impl.SimpleLogger\
+,org.slf4j.impl.StaticLoggerBinder\
+,org.slf4j.impl.SimpleLoggerFactory\
+,org.slf4j.impl.SimpleLoggerConfiguration\
+,org.slf4j.impl.OutputChoice\
+,org.slf4j.LoggerFactory\
+,org.slf4j.helpers.SubstituteLoggerFactory\
+,org.slf4j.helpers.NOPLoggerFactory\
+,org.slf4j.helpers.Util\
+                 -H:EnableURLProtocols=http \
+                 -jar app.jar
+
+#FROM alpine
+FROM ubuntu
+MAINTAINER mikeldpl
+
+EXPOSE 4567
+WORKDIR /root
+COPY --from=builder /root/app .
+COPY docker/logging.properties logging.properties
+CMD ["./app", "-Djava.util.logging.config.file=logging.properties"]

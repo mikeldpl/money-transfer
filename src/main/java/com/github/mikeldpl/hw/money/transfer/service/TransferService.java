@@ -80,8 +80,8 @@ public class TransferService {
         if (amount == null) {
             throw new ValidationApiException("Amount is required.");
         }
-        if (amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new ValidationApiException("Amount can not be less the zero.");
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ValidationApiException("Amount can not be less or equals zero.");
         }
     }
 

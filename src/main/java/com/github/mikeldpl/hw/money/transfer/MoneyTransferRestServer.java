@@ -28,6 +28,9 @@ import spark.Request;
 import spark.Response;
 import spark.Spark;
 
+/**
+ * Contains routing and exception handling.
+ */
 @Singleton
 public class MoneyTransferRestServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MoneyTransferRestServer.class);
@@ -54,7 +57,7 @@ public class MoneyTransferRestServer {
     }
 
     void run() {
-        dbUpdateService.updateDbTables();
+        dbUpdateService.migrateDb();
         oldTransfersHandlerService.startScheduler();
 
         configureRouting();
