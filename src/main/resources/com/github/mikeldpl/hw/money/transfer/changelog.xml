@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="1" author="mikeldpl">
+        <createTable tableName="account">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created_on" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="money" type="decimal(16,5)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="mikeldpl">
+        <createTable tableName="transfer">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created_on" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="tinyint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sender_account_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="receiver_account_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(16,5)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2.1" author="mikeldpl">
+        <addForeignKeyConstraint constraintName="fk_transfer_sender_account"
+                                 baseTableName="transfer" baseColumnNames="sender_account_id"
+                                 referencedTableName="account" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="2.2" author="mikeldpl">
+        <addForeignKeyConstraint constraintName="fk_transfer_receiver_account"
+                                 baseTableName="transfer" baseColumnNames="receiver_account_id"
+                                 referencedTableName="account" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="3" author="mikeldpl">
+        <createTable tableName="transfer_action">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created_on" type="timestamp" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="next_status" type="tinyint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="varchar(1024)">
+            </column>
+            <column name="transfer_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3.1" author="mikeldpl">
+        <addForeignKeyConstraint constraintName="fk_transfer_action_transfer"
+                                 baseTableName="transfer_action" baseColumnNames="transfer_id"
+                                 referencedTableName="transfer" referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>
