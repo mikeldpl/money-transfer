@@ -14,6 +14,7 @@ import com.github.mikeldpl.hw.money.transfer.repository.jdbc.TransferJdbcReposit
 import com.github.mikeldpl.hw.money.transfer.service.OldTransfersHandlerService;
 import com.github.mikeldpl.hw.money.transfer.service.TransactionExecutorJdbcService;
 import com.github.mikeldpl.hw.money.transfer.service.TransactionExecutorService;
+import com.github.mikeldpl.hw.money.transfer.service.TransferActionService;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -53,9 +54,11 @@ abstract class AppModule {
 
     @Provides
     @Singleton
-    static OldTransfersHandlerService oldTransfersHandlerService() {
+    static OldTransfersHandlerService oldTransfersHandlerService(TransferActionService transferActionService) {
         final long transferExpirationPeriod = Duration.ofDays(1).toMillis();
-        return new OldTransfersHandlerService(transferExpirationPeriod, "0 1 * * *");
+        final long executionPeriod = Duration.ofHours(1).toMillis();
+
+        return new OldTransfersHandlerService(transferActionService, transferExpirationPeriod, executionPeriod);
     }
 
     @Binds

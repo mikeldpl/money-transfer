@@ -3,15 +3,21 @@ package com.github.mikeldpl.hw.money.transfer.service;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.Instant;
 import java.util.List;
 
 import com.github.mikeldpl.hw.money.transfer.exception.NotFoundApiException;
 import com.github.mikeldpl.hw.money.transfer.exception.ValidationApiException;
+import com.github.mikeldpl.hw.money.transfer.model.Transfer;
 import com.github.mikeldpl.hw.money.transfer.model.TransferAction;
+import com.github.mikeldpl.hw.money.transfer.model.TransferStatus;
 import com.github.mikeldpl.hw.money.transfer.repository.TransferActionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class TransferActionService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransferActionService.class);
 
     private final TransactionExecutorService transactionExecutorService;
     private final TransferActionRepository transferActionRepository;
@@ -40,11 +46,28 @@ public class TransferActionService {
         validateEntity(transferAction);
         return transactionExecutorService.executeTransaction(false, () -> {
             transferService.checkIfTransferExists(accountId, transferId);
-            //grabs X lock for transfer.
-            transferService.changeStatus(transferId, transferAction.getNextStatus());
-            Long id = transferActionRepository.add(transferAction);
-            return transferActionRepository.getById(id);
+            return changeStatusAndPersist(transferId, transferAction);
         });
+    }
+
+    private TransferAction changeStatusAndPersist(Long transferId, TransferAction transferAction) {
+        //grabs X lock for transfer.
+        transferService.changeStatus(transferId, transferAction.getNextStatus());
+        Long id = transferActionRepository.add(transferAction);
+        return transferActionRepository.getById(id);
+    }
+
+    public void rejectInProgressIdleTransfers(long transferExpirationPeriod) {
+        Instant expirationBorder = Instant.now().minusMillis(transferExpirationPeriod);
+
+        Integer count = transactionExecutorService.executeTransaction(false, () -> {
+            List<Transfer> expiredTransfers = transferService.getByStatusAndCreateDateLimitWithXLock(expirationBorder, TransferStatus.PROCESSING);
+            for (Transfer expiredTransfer : expiredTransfers) {
+                transferService.changeStatus(expiredTransfer, TransferStatus.REJECTED);
+            }
+            return expiredTransfers.size();
+        });
+        LOGGER.info("Removed idle transfers: {}", count);
     }
 
     private void validateEntity(TransferAction transferAction) {

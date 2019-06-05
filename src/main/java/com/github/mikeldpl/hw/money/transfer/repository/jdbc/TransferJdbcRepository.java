@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 import com.github.mikeldpl.hw.money.transfer.model.Transfer;
@@ -64,6 +66,14 @@ public class TransferJdbcRepository implements TransferRepository {
     @Override
     public void updateStatus(Transfer model) {
         new TransferUpdateExecutor(model).executeSingle(transactionExecutorJdbcService.getConnection());
+    }
+
+    @Override
+    public List<Transfer> selectAllByStatusAndCreateDateLimitWithXLock(TransferStatus processing, Instant expirationBorder) {
+        Connection connection = transactionExecutorJdbcService.getConnection();
+        final byte statusId = (byte) processing.getId();
+        final Timestamp from = Timestamp.from(expirationBorder);
+        return new TransferSelectExecutor(true, "status = ? and created_on < ?", statusId, from).execute(connection);
     }
 
     private static class TransferInsertExecutor extends InsertExecutor {

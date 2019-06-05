@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 import com.github.mikeldpl.hw.money.transfer.exception.NotFoundApiException;
@@ -55,11 +56,17 @@ public class TransferService {
         transactionExecutorService.executeTransaction(false, () -> {
             Transfer transfer = transferRepository.getWithXLock(transferId);
             checkExistence(transferId, transfer);
+            changeStatus(transfer, nextStatus);
+            return Void.class;
+        });
+    }
 
+    public void changeStatus(Transfer transfer, TransferStatus nextStatus) {
+        transactionExecutorService.executeTransaction(false, () -> {
             transferStatusMachine.handleStatusChange(transfer, nextStatus);
             transfer.setStatus(nextStatus);
             transferRepository.updateStatus(transfer);
-            return transfer;
+            return Void.class;
         });
     }
 
@@ -105,5 +112,9 @@ public class TransferService {
     public void checkIfTransferExists(Long accountId, Long transferId) {
         //todo: use count
         getByAccountIdAndId(accountId, transferId);
+    }
+
+    public List<Transfer> getByStatusAndCreateDateLimitWithXLock(Instant expirationBorder, TransferStatus processing) {
+        return transferRepository.selectAllByStatusAndCreateDateLimitWithXLock(processing, expirationBorder);
     }
 }
